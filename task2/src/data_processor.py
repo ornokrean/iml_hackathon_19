@@ -165,6 +165,7 @@ def prepare_data(data_path,amount):
 	data = take_care_of_na(data)
 	return data
 
+
 def main() -> None:
 	pd_df = prepare_data(CSV_PATH)
 	print(pd_df.head(5))
