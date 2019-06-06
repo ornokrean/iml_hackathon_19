@@ -119,6 +119,14 @@ def encode_block_column(train):
 	train['Block'] = enc.fit_transform(blocks.reshape(-1, 1))
 
 
+def fill_nans_with_mean(train):
+	for label in train.columns.values:
+		if label in ['District', 'Location Description']:
+			continue
+		mean = train[str(label)].mean()
+		train[str(label)].fillna(mean, inplace=True)
+
+
 def main() -> None:
 	# Import data
 	pd_df = read_file_into_matrix(CSV_PATH)
@@ -133,7 +141,6 @@ def main() -> None:
 	train, test, train_labels, test_labels = initial_data_split(pd_df, labels)
 
 	# Drop columns
-	train = train.drop(columns=['FileRow'])
 	train = train.drop(columns=['Primary Type'])
 
 	# Split dates
@@ -141,26 +148,19 @@ def main() -> None:
 	break_up_date_label(train, "Updated On")
 
 	# Change True/False to ints
-	train = train.applymap(lambda x: 1 if x == True else x)
-	train = train.applymap(lambda x: 0 if x == False else x)
+	train = train.applymap(lambda x: 1 if x is True else x)
+	train = train.applymap(lambda x: 0 if x is False else x)
 
 	# Change Block column to numeric values
 	encode_block_column(train)
 
-	for label in train.columns.values:
-		print("Label: " + label)
-		mean = train[label].mean()
-		print("Mean: " + mean)
-		train[label].fillna(mean, inplace=True)
-		print("OK")
+	# Fill all nans with mean
+	fill_nans_with_mean(train)
 
 	# Get categorical columns
-	train = split_to_categories(train, ['District','Location Description'])
-	print(train.head(50))
+	train = split_to_categories(train, ['District', 'Location Description'])
 
 
-
-#
 # # Describe
 # print_describe(pd_df)
 
@@ -175,5 +175,7 @@ def main() -> None:
 	# plot_better_corr(pd_df)
 
 
-if __name__=='__main__':
+
+
+if __name__ == '__main__':
 	main()
