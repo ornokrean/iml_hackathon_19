@@ -40,8 +40,10 @@ def break_up_date_label(data, label):
 	#	05/27/2019 11:50:00 PM
 	#	0123456789012345678901
 	date_col = pop_column(data, label)
+	# date_col = data[label]
+	data[label + '_year']= date_col.apply(lambda row: int(row[6:10]))
 	data[label + '_day'] = date_col.apply(lambda row: int(row[3:5]))
-	data[label + '_month'] = date_col.apply(lambda row: int(row[6:10]))
+	data[label + '_month'] = date_col.apply(lambda row: int(row[0:2]))
 	data[label + '_hour'] = date_col.apply(lambda row:
 										   (int(row[11:13]) if row[20:22] == 'AM' else int(
 											   row[11:13]) + 12) + int(row[14:16]) / 60.0)
@@ -65,6 +67,8 @@ def main():
 	correlation_matrix = get_corr_matrix(feces)
 	draw_heatmap(correlation_matrix)
 	print(correlation_matrix)
+	print(feces.iloc[0])
+	print(feces.iloc[1])
 
 
 # print(list(feces.ix[[2]]))
