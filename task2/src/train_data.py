@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import datasets
 from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
-
+from sklearn.svm import SVC
 from task2.src.data_processor import prepare_data
 import numpy as np
 from matplotlib import pyplot as plt
@@ -51,55 +51,72 @@ def get_tree_success_rate(data, ratio, iterations,depth = 6):
 	return mean/iterations
 
 
-def test_ada(data,split_ratio=0.3):
+def test_ada(data,split_ratio=0.3,m_depth = 8,T=120,l_rate=1.1):
 
 	train, test, train_labels, test_labels = split_data(data, split_ratio)
 
 	ab = AdaBoostClassifier(
-		DecisionTreeClassifier(max_depth=8),
-		n_estimators=122,
-		learning_rate=1.1)
+		DecisionTreeClassifier(max_depth=m_depth),
+		n_estimators=T,
+		learning_rate=l_rate)
 
 	ab.fit(train, train_labels)
 	return get_success_rate(ab,test,test_labels)
 
-def test_KNN(data,split_ratio=0.3):
+def test_KNN(data,split_ratio=0.3,neighbours = 8):
 	train, test, train_labels, test_labels = split_data(data, split_ratio)
 
-	knn=KNeighborsClassifier(n_neighbors = 8).fit(train, train_labels)
+	knn=KNeighborsClassifier(n_neighbors = neighbours).fit(train, train_labels)
 
 	knn.fit(train, train_labels)
 	return get_success_rate(knn,test,test_labels)
 
-def test_random_forest(data,split_ratio=0.3):
+def test_random_forest(data,split_ratio=0.3,T=100,random_state=30):
 	train, test, train_labels, test_labels = split_data(data, split_ratio)
 
-	rf = RandomForestClassifier(n_estimators=100, criterion='entropy', random_state=30)
+	rf = RandomForestClassifier(n_estimators=T, criterion='entropy', random_state=random_state)
 
 	rf.fit(train, train_labels)
 
 	return get_success_rate(rf,test,test_labels)
 
+def test_SVM(data,split_ratio=0.3,kernel='linear'):
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+	print("creating learner")
+	svm = SVC(kernel = kernel, C = 1)
+	print("fitting")
+	svm.fit(train, train_labels)
+	print("getting success")
+	return get_success_rate(svm,test,test_labels)
+
+
 def main():
 
+	data_amount = 10000
 	# get processed data
-	data = prepare_data(CSV_PATH, 10000)
+	small_data_amount = round(data_amount/10)
+	print("data amount:",data_amount)
+	print("small data amount:",small_data_amount)
+	smaller_data = prepare_data(CSV_PATH, small_data_amount)
+	data = prepare_data(CSV_PATH, data_amount)
 
 
 	# todo this learner yields 0.3-0.4 success rate
-	print("ada success:",test_ada(data))
+	print("ada success rate:",test_ada(smaller_data))
 	# todo this learner yields 0.3-0.4 success rate
-	print("knn success:",test_KNN(data))
+	print("knn success rate:",test_KNN(smaller_data))
 	# todo this learner yields 0.5-0.6 success rate
 	print("Single tree success rate: ",get_tree_success_rate(data,0.3,5))
 	# todo this learner yields 0.5-0.6 success rate
 	print("Random forest success rate: ",test_random_forest(data,0.3))
 
+	# # todo this learner yields ????? success rate
+	# print("SVM success rate: ", test_SVM(data, 0.3, 'linear'))
+	# # todo this learner yields ????? success rate
+	# print("SVM success rate: ", test_SVM(data, 0.3, 'polynomial'))
 
 
-
-
-	# fit on training data notes
+# fit on training data notes
 
 	# todo this learner yields ~0.3 success rate
 	# logistic_regression_learner = LogisticRegression(solver = "lbfgs",multi_class="multinomial",max_iter = 5000).fit(train,train_labels)
