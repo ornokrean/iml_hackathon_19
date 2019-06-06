@@ -14,13 +14,17 @@ def read_file_into_matrix(path):
 	pd_df = pd.read_csv(path)
 	return pd_df
 
-
+def get_tweet_matrices(folder_path):
+	matrices = []
+	for file in os.listdir(folder_path):
+		matrices.append(read_file_into_matrix(os.path.join(folder_path,file)))
+	return matrices
 
 def main():
-	path = os.path.join(CSV_PATH,'cristiano_tweets.csv')
-	pd_df = read_file_into_matrix(path)
+	matrices = get_tweet_matrices(CSV_PATH)
+	for pd_df in matrices:
 
-	pd_df.info()
+		pd_df.info()
 
 
 
