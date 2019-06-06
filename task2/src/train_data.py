@@ -112,7 +112,8 @@ def main():
 	print("small data amount:",small_data_amount)
 	smaller_data = prepare_data(CSV_PATH, small_data_amount)
 	data = prepare_data(CSV_PATH, data_amount)
-
+	print(list(data))
+	print(list(smaller_data))
 
 	# todo this learner yields 0.3-0.4 success rate
 	print("ada success rate:",test_ada(smaller_data))
