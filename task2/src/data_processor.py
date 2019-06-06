@@ -144,40 +144,33 @@ def create_possible_values_file(data):
 		print(vals)
 	out_f.close()
 
+def prepare_data(data):
+	# Change True/False to ints
+	data = data.applymap(lambda x: 1 if x == True else 0 if x==False else x)
 
+	# Change Block column to numeric values
+	encode_block_column(data)
+	# Get categorical columns
+	data = split_to_categories(data, ['District','Location Description'])
+	rename_column(data, {'Unnamed: 0': "FileRow"})
+	break_up_date_label(data, "Date")
+	break_up_date_label(data, "Updated On")
+	convert_crime_to_usable_dummy(data)
+	return data
 
 def main() -> None:
 	# Import data
 	pd_df = read_file_into_matrix(CSV_PATH)
 	# print(pd_df.info())
-
-	# Print number of samples of each type
-	print_num_of_unique_samples_of_each_label(pd_df)
-
+	pd_df = prepare_data(pd_df)
+	print(pd_df.head(2))
 	# Split data to train and test
 	labels = pd_df['Primary Type']
 	train, test, train_labels, test_labels = initial_data_split(pd_df, labels)
-
 	# Remove Type column
 	train = train.drop(columns=['Primary Type'])
 
-	# Change True/False to ints
-	train = train.applymap(lambda x: 1 if x == True else x)
-	train = train.applymap(lambda x: 0 if x == False else x)
 
-	# Change Block column to numeric values
-	encode_block_column(train)
-
-	# Get categorical columns
-	train = split_to_categories(train, ['District','Location Description'])
-
-
-	rename_column(pd_df, {'Unnamed: 0': "FileRow"})
-	break_up_date_label(pd_df, "Date")
-	break_up_date_label(pd_df, "Updated On")
-	convert_crime_to_usable_dummy(pd_df)
-
-	print(train.iloc[:,0])
 
 
 if __name__=='__main__':
