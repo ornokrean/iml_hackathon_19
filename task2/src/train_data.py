@@ -3,6 +3,7 @@ from sklearn import datasets
 from sklearn.metrics import confusion_matrix
 from task2.src.data_processor import prepare_data
 import numpy as np
+from matplotlib import pyplot as plt
 
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
@@ -43,20 +44,26 @@ def get_err_rate_for_params(data,split_ratio,tree_depth):
 
 def main():
 	# get processed data
-	data = prepare_data(CSV_PATH, 1500)
+	data = prepare_data(CSV_PATH, 150000)
 
 	# split the data into training, validation and test
 	# train, succ_rate, train_labels, test_labels = split_data(data,0.7)
 	print("original data shape:", data.shape)
 
 	# todo testing various parametrs on same learner
-	results = []
-	for depth in range(1,10):
-		for ratio in [i/10.0 for i in range(1,10)]:
+	for ratio in [i / 10.0 for i in range(1, 10)]:
+		results = [0]
+		for depth in range(1,10):
 			err_rate = get_err_rate_for_params(data,ratio,depth)
-			results+=[(ratio,depth,err_rate)]
-	for result in results:
-		print("Ratio={}, Depth={}, Success_rate={}".format(result[0],result[1],result[2]))
+			results.append(err_rate)
+			# results+=[[ratio,depth,err_rate]]
+		plt.title("success rate for tree with split ratio {}".format(ratio))
+		plt.plot(results)
+		plt.yticks([i/10.0 for i in range(11)])
+		plt.show()
+
+	# for result in results:
+	# 	print("Ratio={}, Depth={}, Success_rate={}".format(result[0],result[1],result[2]))
 
 
 
