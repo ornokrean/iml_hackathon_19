@@ -6,7 +6,7 @@ import matplotlib as plt
 import sklearn as skl
 
 
-CSV_PATH = "Crimes_since_2005.csv"
+CSV_PATH = "tweets_data"
 
 
 
@@ -17,9 +17,10 @@ def read_file_into_matrix(path):
 
 
 def main():
-	pd_df = read_file_into_matrix(CSV_PATH)
+	path = os.path.join(CSV_PATH,'cristiano_tweets.csv')
+	pd_df = read_file_into_matrix(path)
 
-	print(pd_df.info())
+	pd_df.info()
 
 
 
