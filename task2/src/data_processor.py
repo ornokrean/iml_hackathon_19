@@ -111,7 +111,7 @@ def main():
 
 def remove_lowest_correlation(data):
 
-	
+
 
 	return data
 
@@ -146,7 +146,7 @@ def prepare_data(path, num_of_samples):
 	# data["z"] = funcc(data["Latitude"])
 	data = data.drop(columns=['Latitude', 'Longitude', 'X Coordinate', 'Y Coordinate','Wards'])
 	# Get categorical columns
-	data = split_to_categories(data, ['District', 'Location Description'])
+	data = split_to_categories(data, ['District', 'Location Description', 'Year'])
 
 	data = remove_lowest_correlation(data)
 
