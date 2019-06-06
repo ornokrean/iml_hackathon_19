@@ -144,6 +144,10 @@ def create_possible_values_file(data):
 		print(vals)
 	out_f.close()
 
+def take_care_of_na(data):
+	return data.dropna(how='any')
+
+
 def prepare_data(data_path):
 	data = read_file_into_matrix(data_path)
 	# Change True/False to ints
@@ -157,15 +161,17 @@ def prepare_data(data_path):
 	break_up_date_label(data, "Date")
 	break_up_date_label(data, "Updated On")
 	convert_crime_to_usable_dummy(data)
+
+	data = take_care_of_na(data)
 	return data
 
 def main() -> None:
 	pd_df = prepare_data(CSV_PATH)
-	print(pd_df.head(2))
+	print(pd_df.head(5))
 	# Split data to train and test
 	labels = pd_df['Primary Type']
 	train, test, train_labels, test_labels = initial_data_split(pd_df, labels)
-	# Remove Type column
+	# # Remove Type column
 	train = train.drop(columns=['Primary Type'])
 
 
