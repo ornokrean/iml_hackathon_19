@@ -6,11 +6,42 @@ from sklearn.model_selection import train_test_split
 import seaborn as sns
 from matplotlib.colors import ListedColormap
 
-# CSV_PATH = "Crimes_since_2005.csv"
-CSV_PATH = "partial.csv"
-
+CSV_PATH = "Crimes_since_2005.csv"
+# CSV_PATH = "partial.csv"
+CLASS_HEADER = 'Primary Type'
 pd.set_option("display.max_rows", 20000, "display.max_columns", 90, "display.width", 100)
 
+crime_dict = {"THEFT": 0,
+			  "BATTERY": 1,
+			  "NARCOTICS": 2,
+			  "BURGLARY": 3,
+			  "WEAPONS VIOLATION": 4,
+			  "DECEPTIVE PRACTICE": 5,
+			  "CRIMINAL TRESPASS": 6,
+			  "PROSTITUTION": 7}
+
+def convert_crime_to_usable_dummy(data):
+	data[CLASS_HEADER]=data[CLASS_HEADER].apply(lambda val: crime_dict[val])
+
+
+def rename_column(data, dict):
+	data.rename(columns=dict, inplace=True)
+
+def break_up_date_label(data, label):
+	#	05/27/2019 11:50:00 PM
+	#	0123456789012345678901
+	date_col = pop_column(data, label)
+	# date_col = data[label]
+	data[label + '_year']= date_col.apply(lambda row: int(row[6:10]))
+	data[label + '_day'] = date_col.apply(lambda row: int(row[3:5]))
+	data[label + '_month'] = date_col.apply(lambda row: int(row[0:2]))
+	data[label + '_hour'] = date_col.apply(lambda row:
+										   (int(row[11:13]) if row[20:22] == 'AM' else int(
+											   row[11:13]) + 12) + int(row[14:16]) / 60.0)
+
+
+def pop_column(data, column_header):
+	return data.pop(column_header)
 
 def read_file_into_matrix(path):
 	pd_df = pd.read_csv(path)
@@ -43,6 +74,37 @@ def print_describe(pd_df):
 	print()
 
 
+def plot_corr(df,size=10):
+	corr = df.corr()
+	fig, ax = plt.subplots(figsize=(size, size))
+	ax.matshow(corr)
+	plt.xticks(range(len(corr.columns)), corr.columns, rotation='vertical')
+	plt.yticks(range(len(corr.columns)), corr.columns)
+	plt.show()
+
+
+def print_heatmap(df):
+	corr = df.corr()
+	sns.heatmap(corr,
+			xticklabels=corr.columns.values,
+			yticklabels=corr.columns.values)
+	plt.show()
+
+
+def plot_better_corr(df):
+	labels = df.where(np.triu(np.ones(df.shape)).astype(np.bool))
+	labels = labels.round(2)
+	labels = labels.replace(np.nan,' ', regex=True)
+
+	mask = np.triu(np.ones(df.shape)).astype(np.bool)
+	ax = sns.heatmap(df, mask=mask, cmap='RdYlGn_r', fmt='', square=True, linewidths=1.5)
+	mask = np.ones((8, 8))-mask
+	ax = sns.heatmap(df, mask=mask, cmap=ListedColormap(['white']),annot=labels,cbar=False, fmt='', linewidths=1.5)
+	ax.set_xticks([])
+	ax.set_yticks([])
+	plt.show()
+
+
 def split_to_categories(train, features):
 	for feature in features:
 		dummy = pd.get_dummies(train[feature])
@@ -60,6 +122,7 @@ def encode_block_column(train):
 def main() -> None:
 	# Import data
 	pd_df = read_file_into_matrix(CSV_PATH)
+	rename_column(pd_df, {'Unnamed: 0': "FileRow"})
 	# print(pd_df.info())
 
 	# Print number of samples of each type
@@ -69,8 +132,13 @@ def main() -> None:
 	labels = pd_df['Primary Type']
 	train, test, train_labels, test_labels = initial_data_split(pd_df, labels)
 
-	# Remove Type column
+	# Drop columns
+	train = train.drop(columns=['FileRow'])
 	train = train.drop(columns=['Primary Type'])
+
+	# Split dates
+	break_up_date_label(train, "Date")
+	break_up_date_label(train, "Updated On")
 
 	# Change True/False to ints
 	train = train.applymap(lambda x: 1 if x == True else x)
@@ -79,9 +147,17 @@ def main() -> None:
 	# Change Block column to numeric values
 	encode_block_column(train)
 
+	for label in train.columns.values:
+		print("Label: " + label)
+		mean = train[label].mean()
+		print("Mean: " + mean)
+		train[label].fillna(mean, inplace=True)
+		print("OK")
+
 	# Get categorical columns
 	train = split_to_categories(train, ['District','Location Description'])
 	print(train.head(50))
+
 
 
 #
@@ -93,6 +169,10 @@ def main() -> None:
 # print_all_crimes_types(train_labels)
 #
 
+# # Plot correlation
+	# plot_corr(pd_df)
+	# print_heatmap(pd_df)
+	# plot_better_corr(pd_df)
 
 
 if __name__=='__main__':
