@@ -6,6 +6,7 @@ from sklearn.preprocessing import OrdinalEncoder
 from sklearn.model_selection import train_test_split
 import seaborn as sns
 from matplotlib.colors import ListedColormap
+from scipy import stats
 
 
 # CSV_PATH = "Crimes_since_2005.csv"
@@ -27,7 +28,7 @@ crime_dict = {"THEFT":0,
 
 
 
-pd.set_option("display.max_rows", 20000, "display.max_columns", 90, "display.width", 100)
+pd.set_option("display.max_rows", 20000, "display.max_columns", 900, "display.width", 200)
 
 
 def read_file_into_matrix(path):
@@ -75,6 +76,7 @@ def encode_block_column(train):
 	blocks = train['Block'].values
 	train['Block'] = enc.fit_transform(blocks.reshape(-1, 1))
 
+
 def convert_crime_to_usable_dummy(data):
 	data[CLASS_HEADER]=data[CLASS_HEADER].apply(lambda val: crime_dict[val])
 
@@ -106,10 +108,8 @@ def draw_heatmap(corr,title=""):
 
 
 def break_up_date_label(data, label):
-	#	05/27/2019 11:50:00 PM
-	#	0123456789012345678901
 	date_col = pop_column(data, label)
-	# date_col = data[label]
+
 	data[label + '_year']= date_col.apply(lambda row: int(row[6:10]))
 	data[label + '_day'] = date_col.apply(lambda row: int(row[3:5]))
 	data[label + '_month'] = date_col.apply(lambda row: int(row[0:2]))
@@ -148,12 +148,13 @@ def fill_nans_with_mean(train):
 	for label in train.columns.values:
 		if label in ['District', 'Location Description']:
 			continue
-		mean = train[label].mean()
+		mean = train[label].median()
 		train[label].fillna(mean, inplace=True)
+	return train
 
 def take_care_of_na(data):
-	# fill_nans_with_mean(data)
-	return data.dropna(how='any')
+	return fill_nans_with_mean(data)
+	# return data.dropna(how='any')
 
 
 def prepare_data(data_path,amount):
@@ -163,15 +164,29 @@ def prepare_data(data_path,amount):
 
 	# Change Block column to numeric values
 	encode_block_column(data)
+
 	# Get categorical columns
 	data = split_to_categories(data, ['District','Location Description'])
 	rename_column(data, {'Unnamed: 0': "FileRow"})
+	# Deleting redundant column
+	data = data.drop(['FileRow','ID'], axis=1)
+
+	# Split Date to year month day features
 	break_up_date_label(data, "Date")
+
+	# Split Updated On to year month day features
 	break_up_date_label(data, "Updated On")
+
+	# Converting labels to numberic
 	convert_crime_to_usable_dummy(data)
 
+	# Use ZSCORE for Beat:
+	data['Beat'] = stats.zscore(data['Beat'])
+
 	data = take_care_of_na(data)
+
 	return data
+
 
 
 def main() -> None:
