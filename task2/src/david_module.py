@@ -6,7 +6,7 @@ import sklearn as skl
 import seaborn as sns
 
 CLASS_HEADER = 'Primary Type'
-
+SEPARATOR = "************************************************************************************"
 small_sambosak = "t.csv"
 
 big_sambosak = "Crimes_since_2005.csv"
@@ -78,6 +78,19 @@ def draw_all_corr_matrices(data):
 	correlation_matrix = get_corr_matrix(data)
 	draw_heatmap(correlation_matrix,"all")
 
+def create_possible_values_file(data):
+	out_f = open("possible_values.txt",'w')
+	# headers = list(data)
+	headers = ['Primary Type','Location Description','Arrest','Domestic','District','Ward',
+			   'Community Area','Beat','Year', 'Wards']
+	for header in headers:
+		vals = data[header].unique()
+		out_f.write(header+":\n"+str(list(vals))+"\n\n"+SEPARATOR+"\n\n")
+		print(header+":\n\t",end="")
+		print(vals)
+	out_f.close()
+
+
 def main():
 	# feces = read_file_into_matrix(small_sambosak)
 	feces = read_file_into_matrix(big_sambosak)
@@ -86,19 +99,11 @@ def main():
 	break_up_date_label(feces, "Updated On")
 	convert_crime_to_usable_dummy(feces)
 
-	draw_all_corr_matrices(feces)
-
-
+	# draw_all_corr_matrices(feces)
 
 	feces.info()
 	print(feces.iloc[0])
-
-
-# print(list(feces.ix[[2]]))
-
-# todo for i in headers
-#	print(i[1])ג
-# feces.info()
+	# create_possible_values_file(feces)
 
 
 if __name__ == '__main__':
