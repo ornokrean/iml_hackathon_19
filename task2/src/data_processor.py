@@ -144,7 +144,8 @@ def create_possible_values_file(data):
 		print(vals)
 	out_f.close()
 
-def prepare_data(data):
+def prepare_data(data_path):
+	data = read_file_into_matrix(data_path)
 	# Change True/False to ints
 	data = data.applymap(lambda x: 1 if x == True else 0 if x==False else x)
 
@@ -159,10 +160,7 @@ def prepare_data(data):
 	return data
 
 def main() -> None:
-	# Import data
-	pd_df = read_file_into_matrix(CSV_PATH)
-	# print(pd_df.info())
-	pd_df = prepare_data(pd_df)
+	pd_df = prepare_data(CSV_PATH)
 	print(pd_df.head(2))
 	# Split data to train and test
 	labels = pd_df['Primary Type']
