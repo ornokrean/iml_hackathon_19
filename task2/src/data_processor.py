@@ -152,7 +152,7 @@ def fill_nans_with_mean(train):
 		train[label].fillna(mean, inplace=True)
 
 def take_care_of_na(data):
-	# fill_nans_with_mean(data)
+	fill_nans_with_mean(data)
 	return data.dropna(how='any')
 
 
