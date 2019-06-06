@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
+
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.model_selection import train_test_split
 import seaborn as sns
 from matplotlib.colors import ListedColormap
+
 
 # CSV_PATH = "Crimes_since_2005.csv"
 CSV_PATH = "partial.csv"
@@ -14,6 +16,7 @@ pd.set_option("display.max_rows", 20000, "display.max_columns", 90, "display.wid
 
 def read_file_into_matrix(path):
 	pd_df = pd.read_csv(path)
+
 	return pd_df
 
 
