@@ -20,7 +20,7 @@ def split_data(data, ratio):
 	return split_result
 
 
-def get_error_rate(learner, test, test_labels):
+def get_success_rate(learner, test, test_labels):
 	prediction_fails = learner.predict(test) == test_labels
 	ltest = list(prediction_fails)
 	return round(ltest.count(True) / float(len(ltest)), 3)
@@ -34,9 +34,9 @@ def get_err_rate_for_params(data,split_ratio,tree_depth):
 	print("\ttrain data:", train.shape, "train_labels:", train_labels.shape)
 	print("\ttest data:", test.shape, "test_labels:", test_labels.shape)
 	learner = DecisionTreeClassifier(max_depth=tree_depth).fit(train, train_labels)
-	err_rate = get_error_rate(learner, test, test_labels)
-	print("Got error rate:",err_rate)
-	return err_rate
+	succ_rate = get_success_rate(learner, test, test_labels)
+	print("Got success rate:",succ_rate)
+	return succ_rate
 
 
 
