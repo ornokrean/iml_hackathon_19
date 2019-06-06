@@ -148,8 +148,8 @@ def take_care_of_na(data):
 	return data.dropna(how='any')
 
 
-def prepare_data(data_path):
-	data = read_file_into_matrix(data_path)
+def prepare_data(data_path,amount):
+	data = read_file_into_matrix(data_path).sample(amount)
 	# Change True/False to ints
 	data = data.applymap(lambda x: 1 if x == True else 0 if x==False else x)
 
