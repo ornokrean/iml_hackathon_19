@@ -1,51 +1,149 @@
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.model_selection import train_test_split
-
+from sklearn import datasets
+from sklearn.metrics import confusion_matrix
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 from task2.src.data_processor import prepare_data
+from sklearn.linear_model import Lasso
 import numpy as np
-from sklearn.linear_model import LogisticRegression
+from matplotlib import pyplot as plt
+
+from pandas import DataFrame
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression, RidgeClassifier
 
 CSV_PATH = "Crimes_since_2005.csv"
 # CSV_PATH = "partial_data"
 CLASS_HEADER = 'Primary Type'
 
 
+def split_data(data, ratio):
+	labels = data.pop(CLASS_HEADER)
+	split_result = train_test_split(data, labels, test_size=ratio)
+	data[CLASS_HEADER] = labels
+	return split_result
 
 
-def split_data(data):
-	labels=data.pop(CLASS_HEADER)
-	return train_test_split(data, labels, test_size=0.3)
+def get_success_rate(learner, test, test_labels):
+	prediction_success_indices = learner.predict(test) == test_labels
+	ltest = list(prediction_success_indices)
+	return round(ltest.count(True) / float(len(ltest)), 3)
 
 
+def get_succ_rate_for_params(data, split_ratio, tree_depth):
+	# print("Testing learner for params:")
+	# print("\tsplit ratio:",split_ratio)
+	# print("\ttree depth:",tree_depth)
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+	# print("\ttrain data:", train.shape, "train_labels:", train_labels.shape)
+	# print("\ttest data:", test.shape, "test_labels:", test_labels.shape)
+	learner = DecisionTreeClassifier(max_depth=tree_depth).fit(train, train_labels)
+	succ_rate = get_success_rate(learner, test, test_labels)
+	# print("Got success rate:",succ_rate)
+	return succ_rate
 
-def get_error_rate(learner,test, test_labels):
-	prediction_fails = learner.predict(test)==test_labels
 
-	return prediction_fails
+def get_tree_success_rate(data, ratio, iterations,depth = 6):
+
+	mean = 0
+	for i in range(iterations):
+		mean+= get_succ_rate_for_params(data, ratio, depth)
+	return mean/iterations
+
+
+def test_ada(data,split_ratio=0.3,m_depth = 8,T=120,l_rate=1.1):
+
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+
+	ab = AdaBoostClassifier(
+		DecisionTreeClassifier(max_depth=m_depth),
+		n_estimators=T,
+		learning_rate=l_rate)
+
+	ab.fit(train, train_labels)
+	return get_success_rate(ab,test,test_labels)
+
+def test_KNN(data,split_ratio=0.3,neighbours = 8):
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+
+	knn=KNeighborsClassifier(n_neighbors = neighbours).fit(train, train_labels)
+
+	knn.fit(train, train_labels)
+	return get_success_rate(knn,test,test_labels)
+
+def test_random_forest(data,split_ratio=0.3,T=100,random_state=30):
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+
+	rf = RandomForestClassifier(n_estimators=T, criterion='entropy', random_state=random_state)
+
+	rf.fit(train, train_labels)
+
+	return get_success_rate(rf,test,test_labels)
+
+def test_SVM(data,split_ratio=0.3,kernel='linear'):
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+	svm = SVC(kernel = kernel, C = 1)
+	svm.fit(train, train_labels)
+	return get_success_rate(svm,test,test_labels)
+
+def test_logistic_regression(data,split_ratio=0.3,max_iter=4000,solver='lbfgs',
+							 multi_class="multinomial"):
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+	lr = LogisticRegression(solver=solver, multi_class=multi_class, max_iter=max_iter)
+	lr.fit(train,train_labels)
+	return get_success_rate(lr,test,test_labels)
+
+def test_ridge_regression(data,split_ratio=0.3,solver='svd',alpha=1):
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+	rl = RidgeClassifier(alpha=alpha, normalize=False, solver=solver)
+	rl.fit(train,train_labels)
+	return get_success_rate(rl,test,test_labels)
+
+
 
 
 def main():
+
+	data_amount = 10000
 	# get processed data
-	data = prepare_data(CSV_PATH,1500)
-
-	# split the data into training, validation and test
-	train, test, train_labels, test_labels = split_data(data)
-	print("original data:",data.shape)
-	print("train data:",train.shape,"train_labels:",train_labels.shape)
-	print("test data:",test.shape,"test_labels:",test_labels.shape)
+	small_data_amount = round(data_amount/10)
+	print("data amount:",data_amount)
+	print("small data amount:",small_data_amount)
+	smaller_data = prepare_data(CSV_PATH, small_data_amount)
+	data = prepare_data(CSV_PATH, data_amount)
 
 
-	# fit on training data
-	logistic_regression_learner = LogisticRegression(solver = "lbfgs",multi_class="multinomial",
-													 max_iter = 5000).\
-		fit(train,train_labels)
-	# validate using validation data
-	# print(logistic_regression_learner.score(test,test_labels))
-	# test on test data
+	# todo this learner yields 0.3-0.4 success rate
+	print("ada success rate:",test_ada(smaller_data))
+	# todo this learner yields 0.3-0.4 success rate
+	print("knn success rate:",test_KNN(smaller_data))
+	# todo this learner yields 0.5-0.6 success rate
+	print("Single tree success rate: ",get_tree_success_rate(data,0.3,5))
+	# todo this learner yields 0.5-0.6 success rate
+	print("Random forest success rate: ",test_random_forest(data,0.3))
+	# # todo this learner yields ????? success rate
+	print("Logistic regression success rate:",test_logistic_regression(data))
+	# # todo this learner yields ????? success rate
+	print("Ridge regression success rate:", test_ridge_regression(data))
 
-	test = get_error_rate(logistic_regression_learner,test,test_labels)
-	ltest = list(test)
-	print("Success rate: ",end="")
-	print(ltest.count(True)/float(len(ltest)))
 
-if __name__=='__main__':
+
+	# # todo this learner yields ????? success rate
+	# print("SVM success rate: ", test_SVM(data, 0.3, 'linear'))
+	# # todo this learner yields ????? success rate
+	# print("SVM success rate: ", test_SVM(data, 0.3, 'polynomial'))
+
+
+# fit on training data notes
+
+	# todo this learner yields ~0.3 success rate
+	# logistic_regression_learner = LogisticRegression(solver = "lbfgs",multi_class="multinomial",max_iter = 5000).fit(train,train_labels)
+
+	# todo this learner yields 0.5-0.6 success rate
+	# dtree_model = DecisionTreeClassifier(max_depth=7).fit(train, train_labels)
+
+
+
+if __name__ == '__main__':
 	main()
