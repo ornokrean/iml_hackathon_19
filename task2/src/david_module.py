@@ -91,6 +91,10 @@ def create_possible_values_file(data):
 	out_f.close()
 
 
+
+
+
+
 def main():
 	# feces = read_file_into_matrix(small_sambosak)
 	feces = read_file_into_matrix(big_sambosak)
@@ -101,8 +105,11 @@ def main():
 
 	# draw_all_corr_matrices(feces)
 
-	feces.info()
-	print(feces.iloc[0])
+	# feces.info()
+	# print(feces.iloc[0])
+
+	print(feces.isna().sum())
+	print(feces.shape)
 	# create_possible_values_file(feces)
 
 
