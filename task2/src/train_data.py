@@ -1,7 +1,7 @@
 from sklearn.model_selection import train_test_split
 
 from task2.src.data_processor import prepare_data
-
+import numpy as np
 from sklearn.linear_model import LogisticRegression
 
 CSV_PATH = "Crimes_since_2005.csv"
@@ -17,6 +17,10 @@ def split_data(data):
 
 
 
+def get_error_rate(learner,test, test_labels):
+	prediction_fails = learner.predict(test)!=test_labels
+
+	return prediction_fails
 
 
 def main():
@@ -35,8 +39,13 @@ def main():
 													 max_iter = 5000).\
 		fit(train,train_labels)
 	# validate using validation data
-	print(logistic_regression_learner.score(test,test_labels))
+	# print(logistic_regression_learner.score(test,test_labels))
 	# test on test data
+
+	test = get_error_rate(logistic_regression_learner,test,test_labels)
+	ltest = list(test)
+	print(ltest)
+	print(ltest.count(True)/float(len(ltest)))
 
 if __name__=='__main__':
 	main()
