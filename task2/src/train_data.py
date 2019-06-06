@@ -74,7 +74,7 @@ def test_KNN(data,split_ratio=0.3):
 def test_random_forest(data,split_ratio=0.3):
 	train, test, train_labels, test_labels = split_data(data, split_ratio)
 
-	rf = RandomForestClassifier(n_estimators=10, criterion='entropy', random_state=42)
+	rf = RandomForestClassifier(n_estimators=100, criterion='entropy', random_state=30)
 
 	rf.fit(train, train_labels)
 
@@ -93,7 +93,7 @@ def main():
 	# todo this learner yields 0.5-0.6 success rate
 	print("Single tree success rate: ",get_tree_success_rate(data,0.3,5))
 	# todo this learner yields 0.5-0.6 success rate
-	print("Random forest success rate: ",test_random_forest(data))
+	print("Random forest success rate: ",test_random_forest(data,0.3))
 
 
 
