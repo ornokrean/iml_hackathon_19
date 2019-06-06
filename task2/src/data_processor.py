@@ -144,7 +144,15 @@ def create_possible_values_file(data):
 		print(vals)
 	out_f.close()
 
+def fill_nans_with_mean(train):
+	for label in train.columns.values:
+		if label in ['District', 'Location Description']:
+			continue
+		mean = train[label].mean()
+		train[label].fillna(mean, inplace=True)
+
 def take_care_of_na(data):
+	# fill_nans_with_mean(data)
 	return data.dropna(how='any')
 
 

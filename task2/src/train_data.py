@@ -18,14 +18,14 @@ def split_data(data):
 
 
 def get_error_rate(learner,test, test_labels):
-	prediction_fails = learner.predict(test)!=test_labels
+	prediction_fails = learner.predict(test)==test_labels
 
 	return prediction_fails
 
 
 def main():
 	# get processed data
-	data = prepare_data(CSV_PATH,15000)
+	data = prepare_data(CSV_PATH,1500)
 
 	# split the data into training, validation and test
 	train, test, train_labels, test_labels = split_data(data)
@@ -44,7 +44,7 @@ def main():
 
 	test = get_error_rate(logistic_regression_learner,test,test_labels)
 	ltest = list(test)
-	print(ltest)
+	print("Success rate: ",end="")
 	print(ltest.count(True)/float(len(ltest)))
 
 if __name__=='__main__':
