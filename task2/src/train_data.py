@@ -5,12 +5,13 @@ from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from task2.src.data_processor import prepare_data
+from sklearn.linear_model import Lasso
 import numpy as np
 from matplotlib import pyplot as plt
 
 from pandas import DataFrame
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, RidgeClassifier
 
 CSV_PATH = "Crimes_since_2005.csv"
 # CSV_PATH = "partial_data"
@@ -82,12 +83,24 @@ def test_random_forest(data,split_ratio=0.3,T=100,random_state=30):
 
 def test_SVM(data,split_ratio=0.3,kernel='linear'):
 	train, test, train_labels, test_labels = split_data(data, split_ratio)
-	print("creating learner")
 	svm = SVC(kernel = kernel, C = 1)
-	print("fitting")
 	svm.fit(train, train_labels)
-	print("getting success")
 	return get_success_rate(svm,test,test_labels)
+
+def test_logistic_regression(data,split_ratio=0.3,max_iter=4000,solver='lbfgs',
+							 multi_class="multinomial"):
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+	lr = LogisticRegression(solver=solver, multi_class=multi_class, max_iter=max_iter)
+	lr.fit(train,train_labels)
+	return get_success_rate(lr,test,test_labels)
+
+def test_ridge_regression(data,split_ratio=0.3,solver='svd',alpha=1):
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+	rl = RidgeClassifier(alpha=alpha, normalize=False, solver=solver)
+	rl.fit(train,train_labels)
+	return get_success_rate(rl,test,test_labels)
+
+
 
 
 def main():
@@ -109,6 +122,12 @@ def main():
 	print("Single tree success rate: ",get_tree_success_rate(data,0.3,5))
 	# todo this learner yields 0.5-0.6 success rate
 	print("Random forest success rate: ",test_random_forest(data,0.3))
+	# # todo this learner yields ????? success rate
+	print("Logistic regression success rate:",test_logistic_regression(data))
+	# # todo this learner yields ????? success rate
+	print("Ridge regression success rate:", test_ridge_regression(data))
+
+
 
 	# # todo this learner yields ????? success rate
 	# print("SVM success rate: ", test_SVM(data, 0.3, 'linear'))
