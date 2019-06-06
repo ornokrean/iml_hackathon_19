@@ -5,9 +5,25 @@ from matplotlib import pyplot as plt
 import sklearn as skl
 import seaborn as sns
 
+CLASS_HEADER = 'Primary Type'
+
 small_sambosak = "t.csv"
 
 big_sambosak = "Crimes_since_2005.csv"
+
+crime_dict = {"THEFT":0,
+			  "BATTERY":1,
+			  "NARCOTICS":2,
+			  "BURGLARY":3,
+			  "WEAPONS VIOLATION":4,
+			  "DECEPTIVE PRACTICE":5,
+			  "CRIMINAL TRESPASS":6,
+			  "PROSTITUTION":7}
+
+
+
+def convert_crime_to_usable_dummy(data):
+	data[CLASS_HEADER]=data[CLASS_HEADER].apply(lambda val: crime_dict[val])
 
 
 def rename_column(data, dict):
@@ -30,8 +46,8 @@ def get_corr_matrix(data):
 	return data.corr()
 
 
-def draw_heatmap(corr):
-	plt.axes().set_title('Heatmap of the correlation between original cleaned data')
+def draw_heatmap(corr,title=""):
+	plt.axes().set_title('Heatmap of the correlation between original cleaned data ('+title+')')
 	sns.heatmap(corr, linewidths=1.5, linecolor='black', cmap='RdBu', center=0, vmax=1, vmin=-1)
 	plt.show()
 
@@ -49,26 +65,33 @@ def break_up_date_label(data, label):
 											   row[11:13]) + 12) + int(row[14:16]) / 60.0)
 
 
-#	hour = (orig_hour if am else orig_hour+12) + orig_min/60
+def create_correleration_matrices(data):
+	out_list = []
+	for key in crime_dict.keys():
+		out_list.append((key,data.loc[data[CLASS_HEADER] == crime_dict[key]]))
+	return out_list
 
+def draw_all_corr_matrices(data):
+	for mat in create_correleration_matrices(data):
+		correlation_matrix = get_corr_matrix(mat[1])
+		draw_heatmap(correlation_matrix,mat[0])
+	correlation_matrix = get_corr_matrix(data)
+	draw_heatmap(correlation_matrix,"all")
 
 def main():
-	feces = read_file_into_matrix(small_sambosak)
-	# feces = read_file_into_matrix(big_sambosak)
+	# feces = read_file_into_matrix(small_sambosak)
+	feces = read_file_into_matrix(big_sambosak)
 	rename_column(feces, {'Unnamed: 0': "FileRow"})
-
-	Y = feces['Primary Type']
-	# Y = pop_column(feces,'Primary Type')
-	# feces.convert_objects(convert_numeric=True)
-	crime_appear_count = get_data_val_count_list(Y)
 	break_up_date_label(feces, "Date")
 	break_up_date_label(feces, "Updated On")
-	print(list(feces))
-	correlation_matrix = get_corr_matrix(feces)
-	draw_heatmap(correlation_matrix)
-	print(correlation_matrix)
+	convert_crime_to_usable_dummy(feces)
+
+	draw_all_corr_matrices(feces)
+
+
+
+	feces.info()
 	print(feces.iloc[0])
-	print(feces.iloc[1])
 
 
 # print(list(feces.ix[[2]]))
