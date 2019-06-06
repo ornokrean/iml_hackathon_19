@@ -26,44 +26,38 @@ def get_success_rate(learner, test, test_labels):
 	return round(ltest.count(True) / float(len(ltest)), 3)
 
 
-def get_err_rate_for_params(data,split_ratio,tree_depth):
-	print("Testing learner for params:")
-	print("\tsplit ratio:",split_ratio)
-	print("\ttree depth:",tree_depth)
-	train, test, train_labels, test_labels = split_data(data, 0.7)
-	print("\ttrain data:", train.shape, "train_labels:", train_labels.shape)
-	print("\ttest data:", test.shape, "test_labels:", test_labels.shape)
+def get_succ_rate_for_params(data, split_ratio, tree_depth):
+	# print("Testing learner for params:")
+	# print("\tsplit ratio:",split_ratio)
+	# print("\ttree depth:",tree_depth)
+	train, test, train_labels, test_labels = split_data(data, split_ratio)
+	# print("\ttrain data:", train.shape, "train_labels:", train_labels.shape)
+	# print("\ttest data:", test.shape, "test_labels:", test_labels.shape)
 	learner = DecisionTreeClassifier(max_depth=tree_depth).fit(train, train_labels)
 	succ_rate = get_success_rate(learner, test, test_labels)
-	print("Got success rate:",succ_rate)
+	# print("Got success rate:",succ_rate)
 	return succ_rate
 
+
+def get_tree_success_rate(data, ratio, iterations,depth = 6):
+
+	mean = 0
+	for i in range(iterations):
+		mean+= get_succ_rate_for_params(data, ratio, depth)
+	return mean/iterations
 
 
 
 
 def main():
 	# get processed data
-	data = prepare_data(CSV_PATH, 150000)
+	data = prepare_data(CSV_PATH, 15000)
 
-	# split the data into training, validation and test
-	# train, succ_rate, train_labels, test_labels = split_data(data,0.7)
-	print("original data shape:", data.shape)
 
-	# todo testing various parametrs on same learner
-	for ratio in [i / 10.0 for i in range(1, 10)]:
-		results = [0]
-		for depth in range(1,10):
-			err_rate = get_err_rate_for_params(data,ratio,depth)
-			results.append(err_rate)
-			# results+=[[ratio,depth,err_rate]]
-		plt.title("success rate for tree with split ratio {}".format(ratio))
-		plt.plot(results)
-		plt.yticks([i/10.0 for i in range(11)])
-		plt.show()
 
-	# for result in results:
-	# 	print("Ratio={}, Depth={}, Success_rate={}".format(result[0],result[1],result[2]))
+	# get average error rate for a single tree
+	print("Single tree success rate: ",get_tree_success_rate(data,0.3,5))
+
 
 
 
