@@ -105,7 +105,7 @@ def test_ridge_regression(data,split_ratio=0.3,solver='svd',alpha=1):
 
 def main():
 
-	data_amount = 10000
+	data_amount = 50000
 	# get processed data
 	small_data_amount = round(data_amount/10)
 	print("data amount:",data_amount)
