@@ -1,13 +1,16 @@
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+import matplotlib.pyplot as plt
 import seaborn as sns
-from matplotlib.colors import ListedColormap
+
+
+EXCLUDE_FROM_NAN = ['District', 'Location Description', 'Primary Type']
 
 CSV_PATH = "Crimes_since_2005.csv"
-# CSV_PATH = "partial.csv"
+#CSV_PATH = "partial.csv"
 CLASS_HEADER = 'Primary Type'
 pd.set_option("display.max_rows", 20000, "display.max_columns", 90, "display.width", 100)
 
@@ -24,12 +27,9 @@ def convert_crime_to_usable_dummy(data):
 	data[CLASS_HEADER]=data[CLASS_HEADER].apply(lambda val: crime_dict[val])
 
 
-def rename_column(data, dict):
-	data.rename(columns=dict, inplace=True)
-
 def break_up_date_label(data, label):
-	#	05/27/2019 11:50:00 PM
-	#	0123456789012345678901
+	# 05/27/2019 11:50:00 PM
+	# 0123456789012345678901
 	date_col = pop_column(data, label)
 	# date_col = data[label]
 	data[label + '_year']= date_col.apply(lambda row: int(row[6:10]))
@@ -42,6 +42,7 @@ def break_up_date_label(data, label):
 
 def pop_column(data, column_header):
 	return data.pop(column_header)
+
 
 def read_file_into_matrix(path):
 	pd_df = pd.read_csv(path)
@@ -74,37 +75,6 @@ def print_describe(pd_df):
 	print()
 
 
-def plot_corr(df,size=10):
-	corr = df.corr()
-	fig, ax = plt.subplots(figsize=(size, size))
-	ax.matshow(corr)
-	plt.xticks(range(len(corr.columns)), corr.columns, rotation='vertical')
-	plt.yticks(range(len(corr.columns)), corr.columns)
-	plt.show()
-
-
-def print_heatmap(df):
-	corr = df.corr()
-	sns.heatmap(corr,
-			xticklabels=corr.columns.values,
-			yticklabels=corr.columns.values)
-	plt.show()
-
-
-def plot_better_corr(df):
-	labels = df.where(np.triu(np.ones(df.shape)).astype(np.bool))
-	labels = labels.round(2)
-	labels = labels.replace(np.nan,' ', regex=True)
-
-	mask = np.triu(np.ones(df.shape)).astype(np.bool)
-	ax = sns.heatmap(df, mask=mask, cmap='RdYlGn_r', fmt='', square=True, linewidths=1.5)
-	mask = np.ones((8, 8))-mask
-	ax = sns.heatmap(df, mask=mask, cmap=ListedColormap(['white']),annot=labels,cbar=False, fmt='', linewidths=1.5)
-	ax.set_xticks([])
-	ax.set_yticks([])
-	plt.show()
-
-
 def split_to_categories(train, features):
 	for feature in features:
 		dummy = pd.get_dummies(train[feature])
@@ -121,60 +91,58 @@ def encode_block_column(train):
 
 def fill_nans_with_mean(train):
 	for label in train.columns.values:
-		if label in ['District', 'Location Description']:
+		if label in EXCLUDE_FROM_NAN:
 			continue
-		mean = train[str(label)].mean()
-		train[str(label)].fillna(mean, inplace=True)
+		median = train[label].median()
+		train[label].fillna(median, inplace=True)
 
 
-def main() -> None:
+def main():
+	pass
+	# test, test_labels, train, train_labels = prepare_data(CSV_PATH, 15000)
+	#
+	# # fit on training data
+	# logistic_regression_learner = LogisticRegression(solver="lbfgs",multi_class="multinomial",
+	# 												 max_iter = 5000).fit(train,train_labels)
+	#
+	# # validate using validation data
+	# print(logistic_regression_learner.score(test, test_labels))
+
+
+def prepare_data(path, num_of_samples):
 	# Import data
-	pd_df = read_file_into_matrix(CSV_PATH)
-	rename_column(pd_df, {'Unnamed: 0': "FileRow"})
-	# print(pd_df.info())
-
-	# Print number of samples of each type
-	print_num_of_unique_samples_of_each_label(pd_df)
-
-	# Split data to train and test
-	labels = pd_df['Primary Type']
-	train, test, train_labels, test_labels = initial_data_split(pd_df, labels)
+	data = read_file_into_matrix(path).sample(num_of_samples)
 
 	# Drop columns
-	train = train.drop(columns=['Primary Type'])
+	data = data.drop(columns=['Unnamed: 0', 'ID', 'Updated On', 'Community Areas'])
 
 	# Split dates
-	break_up_date_label(train, "Date")
-	break_up_date_label(train, "Updated On")
+	break_up_date_label(data, "Date")
+	# break_up_date_label(data, "Updated On")
 
 	# Change True/False to ints
-	train = train.applymap(lambda x: 1 if x is True else x)
-	train = train.applymap(lambda x: 0 if x is False else x)
+	data = data.applymap(lambda x: 1 if x is True else 0 if x is False else x)
 
 	# Change Block column to numeric values
-	encode_block_column(train)
+	encode_block_column(data)
 
 	# Fill all nans with mean
-	fill_nans_with_mean(train)
+	fill_nans_with_mean(data)
+
+	cos_cos = lambda x, y: np.cos(x) * np.cos(y)
+	cos_sin = lambda x, y: np.cos(x) * np.sin(y)
+	sin = lambda x: np.sin(x)
+	funca = np.vectorize(cos_cos)
+	funcb = np.vectorize(cos_sin)
+	funcc = np.vectorize(sin)
+	data["x"] = funca(data["Latitude"], data["Longitude"])
+	data["y"] = funcb(data["Latitude"], data["Longitude"])
+	data["z"] = funcc(data["Latitude"])
+	data = data.drop(columns=['Latitude', 'Longitude', 'X Coordinate', 'Y Coordinate'])
 
 	# Get categorical columns
-	train = split_to_categories(train, ['District', 'Location Description'])
-
-
-# # Describe
-# print_describe(pd_df)
-
-
-# # Print all crimes types
-# print_all_crimes_types(train_labels)
-#
-
-# # Plot correlation
-	# plot_corr(pd_df)
-	# print_heatmap(pd_df)
-	# plot_better_corr(pd_df)
-
-
+	data = split_to_categories(data, ['District', 'Location Description'])
+	return data
 
 
 if __name__ == '__main__':
