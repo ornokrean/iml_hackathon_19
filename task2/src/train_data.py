@@ -12,6 +12,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
 import pandas as pd
 
+
 CSV_PATH = "Crimes_since_2005.csv"
 CLASS_HEADER = 'Primary Type'
 
@@ -142,11 +143,17 @@ def do_bagging(data, classifier, split_ratio=0.3):
 
 
 def save_learner_for_later(learner):
-	pickle.dump(learner, open("learner_data.sav", 'wb'))
+	hdf = pd.HDFstore("learner_data.h5")
+	hdf.put('d1',learner,format="table",data_columns=True)
+	hdf.close()
+	# pickle.dump(learner, open("learner_data.sav", 'wb'))
 
 def save_headers_for_later(data):
 	headers = data.columns.values
-	pickle.dump(headers,open("headers_data.sav",'wb'))
+	# pickle.dump(headers,open("headers_data.sav",'wb'))
+	hdf = pd.HDFstore("headers_data.h5")
+	hdf.put('d1',headers,format="table",data_columns=True)
+	hdf.close()
 
 
 def fit_learner_and_save_as_file(data):
