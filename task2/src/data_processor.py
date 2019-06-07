@@ -82,7 +82,7 @@ def align_columns(data, test_data):
 def prepare_data(path,read_file):
 	# Import data
 
-	data = read_file_into_matrix(path).sample(500000) if read_file else path
+	data = read_file_into_matrix(path).sample(300000) if read_file else path
 
 	if not read_file:
 		print(path.columns.values)

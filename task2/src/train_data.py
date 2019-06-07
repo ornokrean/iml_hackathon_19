@@ -4,14 +4,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from task2.src.classifier import classify
-from task2.src.data_processor import prepare_data, align_columns
+from task2.src.data_processor import prepare_data
 from sklearn.linear_model import Perceptron
-import numpy as np
-import pickle
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
 import pandas as pd
-
+from sklearn.externals import joblib
 
 CSV_PATH = "Crimes_since_2005.csv"
 CLASS_HEADER = 'Primary Type'
@@ -143,26 +141,24 @@ def do_bagging(data, classifier, split_ratio=0.3):
 
 
 def save_learner_for_later(learner):
-	hdf = pd.HDFstore("learner_data.h5")
-	hdf.put('d1',learner,format="table",data_columns=True)
-	hdf.close()
-	# pickle.dump(learner, open("learner_data.sav", 'wb'))
+	joblib.dump(learner,"learner_data.pkl")
+
+
 
 def save_headers_for_later(data):
-	headers = data.columns.values
-	# pickle.dump(headers,open("headers_data.sav",'wb'))
-	hdf = pd.HDFstore("headers_data.h5")
-	hdf.put('d1',headers,format="table",data_columns=True)
-	hdf.close()
+	joblib.dump(data.columns.values,"headers_data.pkl")
+
 
 
 def fit_learner_and_save_as_file(data):
 	train, test, train_labels, test_labels = split_data(data, 0.3)
 
-	bc = BaggingClassifier(RandomForestClassifier(bootstrap=True, max_features=0.2,
-												  n_estimators=50, criterion='gini',
-												  min_samples_leaf=1, min_samples_split=5,
-												  random_state=30))
+
+	bc = RandomForestClassifier(bootstrap=True, max_features=0.8,
+												  n_estimators=20, criterion='gini',
+												  min_samples_leaf=1, min_samples_split=4,
+												  random_state=30,n_jobs=15)
+
 
 	bc.fit(train, train_labels)
 	save_headers_for_later(data)

@@ -1,7 +1,0 @@
-﻿data_processor.py – A file where we did all the actions and manipulations on the data received.
-
-train_data.py – File which represents the learner we trained. In this file we used quite a lot of different learners from different hypothesis classes and we saw which of them have lower error rates on the given training and validation data.
-
-Classifier.py – The file which is supposed to be ran by the staff to test our learner.
-
-
