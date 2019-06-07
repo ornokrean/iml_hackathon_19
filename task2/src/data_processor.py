@@ -1,18 +1,11 @@
-import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
 from sklearn.cluster import KMeans
+import numpy as np
 
 EXCLUDE_FROM_NAN = ['District', 'Location Description', 'Primary Type']
 
 CSV_PATH = "Crimes_since_2005.csv"
-#CSV_PATH = "partial.csv"
 CLASS_HEADER = 'Primary Type'
 pd.set_option("display.max_rows", 20000, "display.max_columns", 90, "display.width", 100)
 
@@ -24,9 +17,6 @@ crime_dict = {"THEFT": 0,
 			  "DECEPTIVE PRACTICE": 5,
 			  "CRIMINAL TRESPASS": 6,
 			  "PROSTITUTION": 7}
-
-def convert_crime_to_usable_dummy(data):
-	data[CLASS_HEADER]=data[CLASS_HEADER].apply(lambda val: crime_dict[val])
 
 
 def break_up_date_label(data, label):
@@ -41,41 +31,12 @@ def break_up_date_label(data, label):
 										   (int(row[11:13]) if row[20:22] == 'AM' else int(
 											   row[11:13]) + 12) + int(row[14:16]) / 60.0)
 
-
 def pop_column(data, column_header):
 	return data.pop(column_header)
-
 
 def read_file_into_matrix(path):
 	pd_df = pd.read_csv(path)
 	return pd_df
-
-
-def initial_data_split(data, labels):
-	return train_test_split(data, labels, test_size=0.3)
-
-
-def print_all_crimes_types(train_labels):
-	print('All crimes types:')
-	labels = train_labels.unique()
-	print(labels)
-	print()
-
-
-def print_num_of_unique_samples_of_each_label(pd_df):
-	print('Number of samples of each type:')
-	for label in pd_df.columns.values:
-		num_of_diff_values = pd_df[label].unique()
-		print("Number of unique values of label \"" + str(label) + "\" is: " + str(len(num_of_diff_values)))
-	print()
-
-
-def print_describe(pd_df):
-	print("Describe:")
-	describe = pd_df.describe()
-	print(describe)
-	print()
-
 
 def split_to_categories(train, features):
 	for feature in features:
@@ -83,7 +44,6 @@ def split_to_categories(train, features):
 		train = pd.concat([train, dummy], axis=1)
 	train = train.drop(columns=features)
 	return train
-
 
 def encode_block_column(train):
 	enc = OrdinalEncoder()
@@ -98,115 +58,48 @@ def fill_nans_with_mean(train):
 		median = train[label].median()
 		train[label].fillna(median, inplace=True)
 
-
-
-
-
-def remove_lowest_correlation1(data):
-
-	y = data.pop(CLASS_HEADER)
-	# apply SelectKBest class to extract top 10 best features
-	bestfeatures = SelectKBest(score_func=chi2, k=5)
-	fit = bestfeatures.fit(data, y)
-	# dfscores = pd.DataFrame(fit.scimport sores_)
-	dfcolumns = pd.DataFrame(data.columns)
-	# concat two dataframes for better visualization
-	# featureScores = pd.concat([dfcolumns, dfscores], axis=1)
-	# featureScores.columns = ['Specs', 'Score']  # naming the dataframe columns
-	# print(featureScores.nlargest(10, 'Score'))  # print 10 best features
-
-	data = data[dfcolumns]
-	data[CLASS_HEADER] = y
-	return data
-
-
-
-
-def remove_lowest_correlation(data):
-	labels = data.pop(CLASS_HEADER)
-	# Create correlation matrix
-	corr_matrix = data.corr().abs()
-
-	# Select upper triangle of correlation matrix
-	upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
-	# Find index of feature columns with correlation greater than 0.95
-	to_drop = [column for column in upper.columns if any(upper[column] > 0.2)]
-	for i in to_drop:
-		data.pop(i)
-	# data.drop(data.columns[to_drop],axis=1,inplace=True)
-	data[CLASS_HEADER]=labels
-	return data
-
-def get_david_hypothesis(data):
-	y = data.pop(CLASS_HEADER)
-	print(y.value_counts())
-	data[CLASS_HEADER] = y
-
 colors = {"THEFT": "red",
-			  "BATTERY": "green",
-			  "NARCOTICS": "blue",
-			  "BURGLARY": "pink",
-			  "WEAPONS VIOLATION": "purple",
-			  "DECEPTIVE PRACTICE": "orange",
-			  "CRIMINAL TRESPASS": "black",
-			  "PROSTITUTION": "brown"}
-
-def extract_longlat_mean_for_class(data):
-	grouped_data = data.groupby(CLASS_HEADER)
-	out_dict = {}
-	for key in crime_dict.keys():
-		group = grouped_data.get_group(key)
-		vec = group[['Longitude','Latitude']]
-		gdf = geopandas.GeoDataFrame(vec,geometry=geopandas.points_from_xy(vec.Longitude,
-																		   vec.Latitude))
-		long_vec = group['Longitude']
-		lat_vec = group['Latitude']
-		# print(colors[key])
-		gdf.plot(kind="scatter", x='Latitude', y='Longitude',color=colors[key])
+		  "BATTERY": "green",
+		  "NARCOTICS": "blue",
+		  "BURGLARY": "pink",
+		  "WEAPONS VIOLATION": "purple",
+		  "DECEPTIVE PRACTICE": "orange",
+		  "CRIMINAL TRESPASS": "black",
+		  "PROSTITUTION": "brown"}
 
 
-		median = (long_vec.median(),lat_vec.median())
-		out_dict.update({key:median})
-	# plt.ylim(-88, -87.5)
-	# plt.xlim(41.6, 42.1)
-	plt.show()
-	return out_dict
+def align_columns(data, test_data):
+	for header in data.columns.values:
+		if header not in test_data.columns.values:
+			test_data[header] = np.zeros(test_data.shape[0])
+	for header in test_data.columns.values:
+		if header not in data.columns.values:
+			data[header] = np.zeros(data.shape[0])
+	test_data.pop(CLASS_HEADER)
 
 
-def plot_long_lat(data):
-	print(extract_longlat_mean_for_class(data))
-	exit(-1)
 
-	vec = data[['Latitude','Longitude']]
-	print(vec.values)
-	print(vec.shape)
-	vec.plot(kind="scatter",x='Latitude',y='Longitude')
-
-	plt.ylim(-88,-87.5)
-	plt.xlim(41.6, 42.1)
-	plt.show()
-	exit(-1)
-
-def prepare_data(path, num_of_samples):
-
+def prepare_data(path,read_file):
 	# Import data
-	data = read_file_into_matrix(path)
 
-	if num_of_samples>0:
-		data=data.sample(num_of_samples)
+	data = read_file_into_matrix(path).sample(500000) if read_file else path
 
-	# todo debug
-	# plot_long_lat(data)
+	if not read_file:
+		print(path.columns.values)
 
 	# Drop columns
-	data = data.drop(columns=['Unnamed: 0', 'ID', 'Updated On', 'Community Areas'])
+	for header in ['Unnamed: 0', 'ID', 'Updated On', 'Community Areas']:
+		if header in data.columns.values:
+			pop_column(data,header)
+	# data = data.drop(columns=['Unnamed: 0', 'ID', 'Updated On', 'Community Areas'])
 
 	# Split dates
 	break_up_date_label(data, "Date")
-	# break_up_date_label(data, "Updated On")
 
 	# Change True/False to ints
 	data = data.applymap(lambda x: 1 if x is True else 0 if x is False else x)
+	crimes = pop_column(data,CLASS_HEADER)
+	data[CLASS_HEADER] = crimes.map(lambda x: crime_dict[x])
 
 	# Change Block column to numeric values
 	encode_block_column(data)
@@ -215,16 +108,14 @@ def prepare_data(path, num_of_samples):
 	fill_nans_with_mean(data)
 
 	data = split_to_categories(data, ['District', 'Location Description', 'Year'])
-	sample_num = data.shape[0]
-	cluster_num = sample_num if sample_num<8 else 8
+	# sample_num = data.shape[0]
+	sample_num = len(data[CLASS_HEADER].unique())
+	cluster_num = sample_num if sample_num < 8 else 8
 	kmeans = KMeans(n_clusters=cluster_num, random_state=0).fit(data[['Latitude', 'Longitude']])
 
 	data['cluster'] = kmeans.labels_
 
-	data = data.drop(columns=['Latitude','Longitude', 'X Coordinate', 'Y Coordinate', 'Wards'])
+	data = data.drop(columns=['Latitude', 'Longitude', 'X Coordinate', 'Y Coordinate', 'Wards'])
 
 	return data
 
-
-if __name__ == '__main__':
-	print("Go sell kebab")
