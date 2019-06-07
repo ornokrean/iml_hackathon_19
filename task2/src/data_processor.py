@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
+import geopandas
 
 EXCLUDE_FROM_NAN = ['District', 'Location Description', 'Primary Type']
 
@@ -107,7 +108,7 @@ def remove_lowest_correlation1(data):
 	# apply SelectKBest class to extract top 10 best features
 	bestfeatures = SelectKBest(score_func=chi2, k=5)
 	fit = bestfeatures.fit(data, y)
-	dfscores = pd.DataFrame(fit.scores_)
+	# dfscores = pd.DataFrame(fit.scimport sores_)
 	dfcolumns = pd.DataFrame(data.columns)
 	# concat two dataframes for better visualization
 	# featureScores = pd.concat([dfcolumns, dfscores], axis=1)
@@ -141,10 +142,41 @@ def get_david_hypothesis(data):
 	print(y.value_counts())
 	data[CLASS_HEADER] = y
 
+colors = {"THEFT": "red",
+			  "BATTERY": "green",
+			  "NARCOTICS": "blue",
+			  "BURGLARY": "pink",
+			  "WEAPONS VIOLATION": "purple",
+			  "DECEPTIVE PRACTICE": "orange",
+			  "CRIMINAL TRESPASS": "black",
+			  "PROSTITUTION": "brown"}
+
+def extract_longlat_mean_for_class(data):
+	grouped_data = data.groupby(CLASS_HEADER)
+	out_dict = {}
+	for key in crime_dict.keys():
+		group = grouped_data.get_group(key)
+		vec = group[['Longitude','Latitude']]
+		gdf = geopandas.GeoDataFrame(vec,geometry=geopandas.points_from_xy(vec.Longitude,
+																		   vec.Latitude))
+		long_vec = group['Longitude']
+		lat_vec = group['Latitude']
+		# print(colors[key])
+		gdf.plot(kind="scatter", x='Latitude', y='Longitude',color=colors[key])
+
+
+		median = (long_vec.median(),lat_vec.median())
+		out_dict.update({key:median})
+	# plt.ylim(-88, -87.5)
+	# plt.xlim(41.6, 42.1)
+	plt.show()
+	return out_dict
+
+
 def plot_long_lat(data):
-	# vec = pd.concat([data['Latitude'],data['Longitude']])
-	# vec1 = data['Latitude']
-	# vec2 = data['Longitude']
+	print(extract_longlat_mean_for_class(data))
+	exit(-1)
+
 	vec = data[['Latitude','Longitude']]
 	print(vec.values)
 	print(vec.shape)
@@ -156,8 +188,12 @@ def plot_long_lat(data):
 	exit(-1)
 
 def prepare_data(path, num_of_samples):
+
 	# Import data
 	data = read_file_into_matrix(path).sample(num_of_samples)
+
+	# todo debug
+	# plot_long_lat(data)
 
 	# Drop columns
 	data = data.drop(columns=['Unnamed: 0', 'ID', 'Updated On', 'Community Areas'])
@@ -185,14 +221,14 @@ def prepare_data(path, num_of_samples):
 	# data["y"] = funcb(data["Latitude"], data["Longitude"])
 	# data["z"] = funcc(data["Latitude"])
 	# data = data.drop(columns=['Latitude', 'Longitude', 'X Coordinate', 'Y Coordinate','Wards'])
-	# Get categorical columns
+
 	data = split_to_categories(data, ['District', 'Location Description', 'Year'])
 
 	# data = remove_lowest_correlation(data)
 
 	# get_david_hypothesis(data)
 
-	plot_long_lat(data)
+	# plot_long_lat(data)
 
 	return data
 
