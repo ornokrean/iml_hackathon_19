@@ -12,6 +12,7 @@ def get_learner():
 def get_headers():
 	# loaded_headers = pickle.load(open("headers_data.sav",'rb'))
 	loaded_headers = pd.read_hdf('headers_data.h5','d1')
+
 	return loaded_headers
 
 def align_columns(known_headers, test_data):
