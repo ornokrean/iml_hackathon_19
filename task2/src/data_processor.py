@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
-import geopandas
+from sklearn.cluster import KMeans
 
 EXCLUDE_FROM_NAN = ['District', 'Location Description', 'Primary Type']
 
@@ -211,24 +211,13 @@ def prepare_data(path, num_of_samples):
 	# Fill all nans with mean
 	fill_nans_with_mean(data)
 
-	# cos_cos = lambda x, y: np.cos(x) * np.cos(y)
-	# cos_sin = lambda x, y: np.cos(x) * np.sin(y)
-	# sin = lambda x: np.sin(x)
-	# funca = np.vectorize(cos_cos)
-	# funcb = np.vectorize(cos_sin)
-	# funcc = np.vectorize(sin)
-	# data["x"] = funca(data["Latitude"], data["Longitude"])
-	# data["y"] = funcb(data["Latitude"], data["Longitude"])
-	# data["z"] = funcc(data["Latitude"])
-	# data = data.drop(columns=['Latitude', 'Longitude', 'X Coordinate', 'Y Coordinate','Wards'])
-
 	data = split_to_categories(data, ['District', 'Location Description', 'Year'])
 
-	# data = remove_lowest_correlation(data)
+	kmeans = KMeans(n_clusters=8, random_state=0).fit(data[['Latitude', 'Longitude']])
 
-	# get_david_hypothesis(data)
+	data['cluster'] = kmeans.labels_
 
-	# plot_long_lat(data)
+	data = data.drop(columns=['Latitude','Longitude', 'X Coordinate', 'Y Coordinate', 'Wards'])
 
 	return data
 

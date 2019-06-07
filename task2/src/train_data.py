@@ -156,14 +156,13 @@ def do_bagging(data,classifier,split_ratio=0.3):
 
 def main():
 
-	data_amount = 10000
+	data_amount = 100000
 	# get processed data
 	# small_data_amount = round(data_amount/10)
 	print("data amount:",data_amount)
 	# print("small data amount:",small_data_amount)
 	# smaller_data = prepare_data(CSV_PATH, small_data_amount)
 	data = prepare_data(CSV_PATH, data_amount)
-	print(list(data))
 	# print(list(smaller_data))
 
 	# todo this learner yields ??? success rate
