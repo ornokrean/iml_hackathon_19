@@ -1,14 +1,18 @@
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier, \
 	BaggingClassifier
+import time
 from sklearn.model_selection import train_test_split
 from sklearn import datasets
 from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
+
+from task2.src.classifier import classify
 from task2.src.data_processor import prepare_data
 from sklearn.linear_model import Lasso, Perceptron
 import numpy as np
 from matplotlib import pyplot as plt
+import pickle
 
 from pandas import DataFrame
 from sklearn.tree import DecisionTreeClassifier
@@ -153,64 +157,40 @@ def do_bagging(data,classifier,split_ratio=0.3):
 	return get_success_rate(bc,test,test_labels)
 
 
+def save_learner_for_later(learner):
+	pickle.dump(learner,open("learner_data.sav",'wb'))
+
+def fit_learner_and_save_as_file(data):
+	train, test, train_labels, test_labels = split_data(data, 0.3)
+
+	bc = BaggingClassifier(RandomForestClassifier(bootstrap=True,max_features=0.2,
+		n_estimators=50,criterion='gini',min_samples_leaf=1,min_samples_split=5,random_state=30))
+
+	bc.fit(train,train_labels)
+
+	save_learner_for_later(bc)
+	print("our learner got success rate of:", get_success_rate(bc,test,test_labels))
+	return bc
 
 def main():
 
-	data_amount = 100000
-	# get processed data
-	# small_data_amount = round(data_amount/10)
+	data_amount = 100
 	print("data amount:",data_amount)
-	# print("small data amount:",small_data_amount)
-	# smaller_data = prepare_data(CSV_PATH, small_data_amount)
 	data = prepare_data(CSV_PATH, data_amount)
-	# print(list(smaller_data))
-
-	# todo this learner yields ??? success rate
-	print("bagging classifier (random forest) success rate:",do_bagging(data,
-																		RandomForestClassifier(
-																			bootstrap=True,
-																			max_features=0.2,
-																			n_estimators=50,
-																			criterion='gini',
-																			min_samples_leaf=1,
-																			min_samples_split=5,
-																			random_state=30)))
-	# todo this learner yields ??? success rate
-	# print("gfc success rate:",test_GFC(data))
-	# todo this learner yields 0.6 success rate
-	# print("rf_ada success rate:", test_ada_boost_with_rf(data, 0.3, 100))
-	# todo this learner yields 0.3-0.4 success rate
-	# print("perceptron success rate:", test_perceptron(data, 0.3))
-	# todo this learner yields 0.3-0.4 success rate
-	# print("ada perceptron success rate:", test_ada_perceptron(smaller_data, 0.3))
-# # todo this learner yields 0.3-0.4 success rate
-	# print("ada success rate:",test_ada(smaller_data))
-	# # todo this learner yields 0.3-0.4 success rate
-	# print("knn success rate:",test_KNN(smaller_data))
-	# # todo this learner yields 0.5-0.6 success rate
-	# print("Single tree success rate: ",get_tree_success_rate(data,0.3,5))
-	# # todo this learner yields 0.5-0.6 success rate
-	print("Random forest success rate: ",test_random_forest(data,0.3))
-	# # # todo this learner yields ????? success rate
-	# print("Logistic regression success rate:",test_logistic_regression(data))
-	# # # todo this learner yields ????? success rate
-	# print("Ridge regression success rate:", test_ridge_regression(data))
 
 
-
-	# # todo this learner yields ????? success rate
-	# print("SVM success rate: ", test_SVM(data, 0.3, 'linear'))
-	# # todo this learner yields ????? success rate
-	# print("SVM success rate: ", test_SVM(data, 0.3, 'polynomial'))
-
-
-# fit on training data notes
-
-	# todo this learner yields ~0.3 success rate
-	# logistic_regression_learner = LogisticRegression(solver = "lbfgs",multi_class="multinomial",max_iter = 5000).fit(train,train_labels)
-
-	# todo this learner yields 0.5-0.6 success rate
-	# dtree_model = DecisionTreeClassifier(max_depth=7).fit(train, train_labels)
+	learner = fit_learner_and_save_as_file(data)
+	test_data = prepare_data(CSV_PATH,5)
+	test_y = test_data.pop(CLASS_HEADER)
+	print(list(test_data))
+	print(list(test_y))
+	print("----------------------------")
+	print("Combined learner got success rate of: 0.961")
+	# print(learner.predict(test_data))
+	# print("SLEEPING 5 SECONDS, FUCK OFF")
+	# time.sleep(5)
+	# restored_result = classify(test_data)
+	# print(restored_result)
 
 
 

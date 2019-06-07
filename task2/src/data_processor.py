@@ -190,7 +190,10 @@ def plot_long_lat(data):
 def prepare_data(path, num_of_samples):
 
 	# Import data
-	data = read_file_into_matrix(path).sample(num_of_samples)
+	data = read_file_into_matrix(path)
+
+	if num_of_samples>0:
+		data=data.sample(num_of_samples)
 
 	# todo debug
 	# plot_long_lat(data)
@@ -212,8 +215,9 @@ def prepare_data(path, num_of_samples):
 	fill_nans_with_mean(data)
 
 	data = split_to_categories(data, ['District', 'Location Description', 'Year'])
-
-	kmeans = KMeans(n_clusters=8, random_state=0).fit(data[['Latitude', 'Longitude']])
+	sample_num = data.shape[0]
+	cluster_num = sample_num if sample_num<8 else 8
+	kmeans = KMeans(n_clusters=cluster_num, random_state=0).fit(data[['Latitude', 'Longitude']])
 
 	data['cluster'] = kmeans.labels_
 
